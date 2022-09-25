@@ -1,3 +1,5 @@
+import json
+import re
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -22,12 +24,24 @@ class CbfJogos(Crawler):
         jogos = soup.find('div', attrs= {'data-slide-index':'27'})
         return jogos
 
+    def formatador(self, text, tipo):
+      if (tipo == 'data'):
+          data_id = re.sub(r"^\s+", "", text, flags=re.UNICODE | re.MULTILINE)
+          data_id = data_id.replace('\r\n', '').split('-')
+          data = data_id[0]
+          id = data_id[1]
+          id = re.search("[0-9]{3}", id)[0]
+      return data, id
+
     def organiza_jogos(self, lista):
+        json = []
         jogos = lista.find_all('li')
         for jogo in jogos:
             data_id = jogo.find('span', attrs= {'partida-desc text-1 color-lightgray p-b-15 block uppercase text-center'}).get_text()
-            data = data_id.split(' - ')
-        return data
+            data, id =  self.formatador(data_id, 'data')
+            data = {'data_jogo' : data, 'id' : id}
+            json.append(data)
+        return json
 
     def executer(self, url):
         conteudo = self.obtem_html(url)
@@ -36,5 +50,5 @@ class CbfJogos(Crawler):
         return jogos
 
 crawler = CbfJogos()
-saida = crawler.executer(CbfJogos.SERIEA_URL)
-print(saida)
+j = crawler.executer(CbfJogos.SERIEA_URL)
+print(j)
