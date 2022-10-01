@@ -4,8 +4,6 @@ from urllib import response
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
-from jogos.utils import formater
-
 
 class Crawler:
     content = None
@@ -38,9 +36,9 @@ class CbfJogos(Crawler):
             "data_coleta": "<data_da_coleta>",
             "jogos": []
         }
-        rodadas = soup.find_all('div', attrs={'data-slide-index'})
+        rodadas = soup.select('div.swiper-slide')
         for rodada in rodadas:
-            response['jogos'].update(self.organiza_jogos(rodada))
+            response['jogos'].extend(self.organiza_jogos(rodada))
         return response
 
     def extractor_data_id(self, jogo):
@@ -51,7 +49,7 @@ class CbfJogos(Crawler):
         data_id = data_id.replace('\r\n', '').split('-')
         data = data_id[0]
         id = data_id[1]
-        id = re.search("[0-9]{3}", id)[0]
+        id = re.search("[0-9]+", id)[0]
         return data, id
 
     def extractor_rodada(self, lista):
