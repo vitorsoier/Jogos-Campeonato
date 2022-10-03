@@ -1,6 +1,7 @@
 import json
 import re
 from urllib import response
+from attr import attrs
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -50,19 +51,42 @@ class CbfJogos(Crawler):
         data = data_id[0]
         id = data_id[1]
         id = re.search("[0-9]+", id)[0]
-        return data, id
+        self.data =  data
+        self.id = id
 
     def extractor_rodada(self, lista):
         rodada = lista.find('h3').get_text()
-        return rodada
+        rodada = re.search("[0-9]+", rodada)[0]
+        self.rodada = rodada
+    
+    def extractor_local_jogo(self, lista):
+        local = lista.find('span', attrs= {'partida-desc text-1 color-lightgray block uppercase text-center'}).get_text()
+        local = re.sub(r"^\s+", "", local,
+                         flags=re.UNICODE | re.MULTILINE)
+        local = re.sub("\n[a-z]+ [a-z]+ [a-z]+ [a-z]+\n|\n[a-z]+ [a-z]+ [a-z]+\n", "", local,
+        flags=re.UNICODE | re.IGNORECASE)
+        self.local = local
+    
+    def extractor_mandante(self, lista):
+        info_mandante = lista.find('div', attrs = {'time pull-left'})
+        nome = info_mandante.find('img')['title']
+        imagem = info_mandante.find('img')['src']
+        sigla = info_mandante.get_text()
+        sigla = re.sub(r"^\s+", "", sigla,
+                         flags=re.UNICODE | re.MULTILINE ).replace('\n', '')
+        mandante = {'nome': nome, 'imagem_url': imagem, 'sigla' : sigla}
+        self.mandante = mandante
+
 
     def organiza_jogos(self, lista):
         json = []
         jogos = lista.find_all('li')
-        rodada = self.extractor_rodada(lista)
+        self.extractor_rodada(lista)
         for jogo in jogos:
-            data, id = self.extractor_data_id(jogo)
-            data = {'data_jogo': data, 'id': id, 'rodada': rodada}
+            self.extractor_local_jogo(jogo)
+            self.extractor_data_id(jogo)
+            self.extractor_mandante(jogo)
+            data = {'rodada': self.rodada, 'id': self.id, 'data_jogo': self.data, 'local_jogo': self.local, 'mandante' : self.mandante}
             json.append(data)
         return json
 
