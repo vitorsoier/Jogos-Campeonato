@@ -49,7 +49,7 @@ class CbfJogos(Crawler):
         data_id = re.sub(r"^\s+", "", text,
                          flags=re.UNICODE | re.MULTILINE)
         data_id = data_id.replace('\r\n', '').split('-')
-        data = data_id[0]
+        data = data_id[0].split(', ')[1]
         id = data_id[1]
         id = re.search("[0-9]+", id)[0]
         self.data = data
@@ -93,7 +93,7 @@ class CbfJogos(Crawler):
         placar = lista.find(
             'span', attrs={'bg-blue color-white label-2'})
         if placar is None:
-            placar = [0, 0]
+            placar = []
         else:
             placar = placar.get_text().split(' x ')
         self.placar = placar
