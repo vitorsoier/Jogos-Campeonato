@@ -1,6 +1,7 @@
 import datetime as dtm
 import re
 from urllib import response
+from attr import attrs
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -112,20 +113,28 @@ class CbfJogos(Crawler):
         self.placar = placar
 
     def extractor_detalhes(self, lista):
-        pass
+        infos = lista.find('span', attrs ={'partida-desc text-1 color-lightgray block uppercase text-center'})
+        link = infos.find('a')['href']
+        self.link_detalhes = link
+
+    def info_jogos(self, jogo):
+        self.extractor_local_jogo(jogo)
+        self.extractor_data_id(jogo)
+        self.extractor_mandante(jogo)
+        self.extractor_visitante(jogo)
+        self.extractor_placar(jogo)
+        self.extractor_detalhes(jogo)
 
     def organiza_jogos(self, lista):
         json = []
         jogos = lista.find_all('li')
         self.extractor_rodada(lista)
         for jogo in jogos:
-            self.extractor_local_jogo(jogo)
-            self.extractor_data_id(jogo)
-            self.extractor_mandante(jogo)
-            self.extractor_visitante(jogo)
-            self.extractor_placar(jogo)
+            self.info_jogos(jogo)
             data = {'rodada': self.rodada, 'id': self.id, 'data_jogo': self.data,
-                    'local_jogo': self.local, 'mandante': self.mandante, 'visitante': self.visitante, 'placar': self.placar}
+                'local_jogo': self.local, 'mandante': self.mandante, 'visitante': self.visitante,
+                'placar': self.placar, "link_detalhes": self.link_detalhes
+            }
             json.append(data)
         return json
 
