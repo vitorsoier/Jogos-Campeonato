@@ -1,12 +1,10 @@
 import datetime as dtm
-import re
-from urllib import response
-from attr import attrs
-import requests
 import pandas as pd
+import re
+import requests
 from bs4 import BeautifulSoup
 from unicodedata import normalize as nm
-
+from urllib import response
 class Crawler:
     content = None
 
