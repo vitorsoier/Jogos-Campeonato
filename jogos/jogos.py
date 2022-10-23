@@ -5,39 +5,39 @@ import requests
 from bs4 import BeautifulSoup
 from unicodedata import normalize as nm
 from urllib import response
+
+
 class Crawler:
     content = None
 
-    def __init__(self, url):
-        self.url = url
+    def __init__(self, serie):
+        self.serie = serie.lower()
+        self.url = 'https://www.cbf.com.br/futebol-brasileiro/competicoes/campeonato-brasileiro-serie-' + self.serie
 
     def obtem_html(self):
         header = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
             "X-Requested-With": "XMLHttpRequest"
         }
-        self.inicio_coleta= self.registra_time()
+        self.inicio_coleta = self.registra_time()
         response = requests.get(url=self.url, headers=header, verify=False)
         response.encoding = 'UTF-8'
         self.content = response.text
         self.fim_coleta = self.registra_time()
 
     def registra_time(self):
-      time = dtm.datetime.now()                    
-      return time.strftime("%Y-%m-%d %H:%M:%S.%f") 
+        time = dtm.datetime.now()
+        return time.strftime("%Y-%m-%d %H:%M:%S.%f")
+
 
 class CbfJogos(Crawler):
-    SITES = {
-    'serie-a' : 'https://www.cbf.com.br/futebol-brasileiro/competicoes/campeonato-brasileiro-serie-a',
-    'serie-b' : 'https://www.cbf.com.br/futebol-brasileiro/competicoes/campeonato-brasileiro-serie-b'
-    }
 
     def lista_jogos(self):
         self.obtem_html()
         soup = BeautifulSoup(self.content, 'html.parser')
         response = {
             "origem": "cbf",
-            "serie": 'Serie-' + self.url[-1].upper(),
+            "serie": self.serie.upper(),
             "url": self.url,
             "request_at": self.inicio_coleta,
             "coleted_at": self.fim_coleta,
@@ -47,10 +47,11 @@ class CbfJogos(Crawler):
         for rodada in rodadas:
             response['jogos'].extend(self.organiza_jogos(rodada))
         return response
-      
+
     def remove_acentos(self, str):
-      str_sem_acentos = nm('NFKD', str).encode('ASCII', 'ignore').decode('ASCII')
-      return str_sem_acentos
+        str_sem_acentos = nm('NFKD', str).encode(
+            'ASCII', 'ignore').decode('ASCII')
+        return str_sem_acentos
 
     def extractor_data_id(self, jogo):
         text = jogo.find('span', attrs={
@@ -111,7 +112,8 @@ class CbfJogos(Crawler):
         self.placar = placar
 
     def extractor_detalhes(self, lista):
-        infos = lista.find('span', attrs ={'partida-desc text-1 color-lightgray block uppercase text-center'})
+        infos = lista.find('span', attrs={
+                           'partida-desc text-1 color-lightgray block uppercase text-center'})
         link = infos.find('a')['href']
         self.link_detalhes = link
 
@@ -130,9 +132,9 @@ class CbfJogos(Crawler):
         for jogo in jogos:
             self.info_jogos(jogo)
             data = {'rodada': self.rodada, 'id': self.id, 'data_jogo': self.data,
-                'local_jogo': self.local, 'mandante': self.mandante, 'visitante': self.visitante,
-                'placar': self.placar, "link_detalhes": self.link_detalhes
-            }
+                    'local_jogo': self.local, 'mandante': self.mandante, 'visitante': self.visitante,
+                    'placar': self.placar, "link_detalhes": self.link_detalhes
+                    }
             json.append(data)
         return json
 
