@@ -4,7 +4,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from unicodedata import normalize as nm
-from urllib import response
+
 class Crawler:
     content = None
 
@@ -37,7 +37,7 @@ class CbfJogos(Crawler):
         soup = BeautifulSoup(self.content, 'html.parser')
         response = {
             "origem": "cbf",
-            "serie": 'Serie-' + self.url[-1].upper(),
+            "serie": re.search('serie-[a-z]', self.url)[0].upper(),
             "url": self.url,
             "request_at": self.inicio_coleta,
             "coleted_at": self.fim_coleta,
